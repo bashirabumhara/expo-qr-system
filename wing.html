@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل زيارة الجناح</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <h2>تسجيل زيارة الجناح</h2>
+    <form id="wingForm">
+        <label>اسم الجناح:</label>
+        <input type="text" id="wingName" required><br><br>
+
+        <label>كود QR للزائر:</label>
+        <input type="text" id="qrCode" required>
+        <button type="button" onclick="startScanner()">📷 مسح QR</button>
+        <div id="reader" style="width: 300px;"></div><br>
+
+        <button type="submit">تسجيل الزيارة</button>
+    </form>
+
+    <script>
+        const scriptURL = "https://script.google.com/macros/s/AKfycbwF5rRVAWUrvF_9bkuMLtmbG3xLHjCRKjO28mqR2T7gQe-9Xq3sCQqKQcj_3iYXxXok/exec";
+
+        function startScanner() {
+            document.getElementById("reader").innerHTML = "";
+            let scanner = new Html5Qrcode("reader");
+            scanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                (decodedText) => {
+                    document.getElementById("qrCode").value = decodedText;
+                    scanner.stop();
+                },
+                (errorMessage) => {}
+            );
+        }
+
+        document.getElementById("wingForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            
+            let data = {
+                type: "logVisit",
+                qrCode: document.getElementById("qrCode").value,
+                wing: document.getElementById("wingName").value
+            };
+
+            fetch(scriptURL, {
+                method: "POST",
+                body: JSON.stringify(data),
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(response => response.text())
+            .then(result => alert(result))
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
+</body>
+</html>
