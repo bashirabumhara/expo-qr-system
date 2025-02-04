@@ -21,7 +21,7 @@
     </form>
 
     <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbwF5rRVAWUrvF_9bkuMLtmbG3xLHjCRKjO28mqR2T7gQe-9Xq3sCQqKQcj_3iYXxXok/exec";
+        const scriptURL = "https://script.google.com/macros/s/AKfycbzx7AaJixclKAJDiBA-hIUiOIZD00RpeUDR25IoEGlqvnLNH7UPkInAHMfCqpcDhfsL/exec";  // Replace with your actual script URL
 
         function startScanner() {
             document.getElementById("reader").innerHTML = "";
@@ -52,8 +52,14 @@
                 headers: { "Content-Type": "application/json" }
             })
             .then(response => response.text())
-            .then(result => alert(result))
-            .catch(error => console.error("Error:", error));
+            .then(result => {
+                alert(result);
+                console.log(result);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("حدث خطأ أثناء إرسال البيانات. تحقق من الاتصال بالإنترنت أو المحاولة لاحقًا.");
+            });
         });
     </script>
 </body>
