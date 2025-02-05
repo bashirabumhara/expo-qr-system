@@ -1,74 +1,58 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الزائر</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <title>Visitor Registration</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-    <h2>تسجيل الزائر</h2>
-    <form id="visitorForm">
-        <label>الاثم:</label>
-        <input type="text" id="name" required><br><br>
+  <form id="registrationForm">
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="text" name="university" placeholder="University" required>
+    <input type="text" name="college" placeholder="College" required>
+    <input type="tel" name="phone" placeholder="Phone" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="text" name="serial" id="serial" placeholder="Scan QR Code" required readonly>
+    <div id="qrReader" style="width: 300px"></div>
+    <button type="submit">Register</button>
+  </form>
 
-        <label>الجامعة:</label>
-        <input type="text" id="university" required><br><br>
+  <script>
+    const qrScanner = new Html5Qrcode("qrReader");
+    
+    // Start QR Scanner
+    qrScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      (qrCode) => {
+        document.getElementById('serial').value = qrCode;
+        qrScanner.stop();
+      },
+      (error) => console.error(error)
+    ).catch(err => console.error(err));
 
-        <label>الكلية:</label>
-        <input type="text" id="college" required><br><br>
-
-        <label>كود QR:</label>
-        <input type="text" id="qrCode" required>
-        <button type="button" onclick="startScanner()">📷 مسح QR</button>
-        <div id="reader" style="width: 300px;"></div><br>
-
-        <button type="submit">تسجيل</button>
-    </form>
-
-    <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbwNjZRLcHMg0l1oNFSW8SEqWGzyMHSsFqBMbAFKl7pHfXHzcPXc5p3_9NQ2IJ8vOf_j/exec";  // Replace with your actual script URL
-
-        function startScanner() {
-            document.getElementById("reader").innerHTML = "";
-            let scanner = new Html5Qrcode("reader");
-            scanner.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: 250 },
-                (decodedText) => {
-                    document.getElementById("qrCode").value = decodedText;
-                    scanner.stop();
-                },
-                (errorMessage) => {}
-            );
-        }
-
-        document.getElementById("visitorForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            
-            let data = {
-                type: "register",
-                name: document.getElementById("name").value,
-                university: document.getElementById("university").value,
-                college: document.getElementById("college").value,
-                qrCode: document.getElementById("qrCode").value
-            };
-
-            fetch(scriptURL, {
-                method: "POST",
-                body: JSON.stringify(data),
-                headers: { "Content-Type": "application/json" }
-            })
-            .then(response => response.text())
-            .then(result => {
-                alert(result);
-                console.log(result);
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("حدث خطأ أثناء إرسال البيانات. تحقق من الاتصال بالإنترنت أو المحاولة لاحقًا.");
-            });
-        });
-    </script>
+    document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzViYJSyJemchSq4Cr0dSP4uEN6MI4oZgkakqB9p1cVdTi3_5aEt8dkOKxtgloUUZjW/exec', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'registration',
+          serial: formData.get('serial'),
+          name: formData.get('name'),
+          university: formData.get('university'),
+          college: formData.get('college'),
+          phone: formData.get('phone'),
+          email: formData.get('email')
+        })
+      });
+      
+      const result = await response.json();
+      if (result.status === 'success') {
+        alert('Registration successful!');
+        window.location.reload();
+      }
+    });
+  </script>
 </body>
 </html>
