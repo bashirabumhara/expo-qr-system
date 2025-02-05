@@ -1,66 +1,44 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل زيارة الجناح</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <title>Wing Check-in</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-    <h2>تسجيل زيارة الجناح</h2>
-    <form id="wingForm">
-        <label>اسم الجناح:</label>
-        <input type="text" id="wingName" required><br><br>
+  <select id="wingSelect">
+    <option value="wing1">Wing 1</option>
+    <option value="wing2">Wing 2</option>
+    <option value="wing3">Wing 3</option>
+  </select>
+  <div id="qrReader" style="width: 300px"></div>
 
-        <label>كود QR للزائر:</label>
-        <input type="text" id="qrCode" required>
-        <button type="button" onclick="startScanner()">📷 مسح QR</button>
-        <div id="reader" style="width: 300px;"></div><br>
+  <script>
+    const qrScanner = new Html5Qrcode("qrReader");
+    const wingSelect = document.getElementById('wingSelect');
 
-        <button type="submit">تسجيل الزيارة</button>
-    </form>
-
-    <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbw9PmDQlwoamPv8h0CsT_0hSRZoMihY6Ft6oGShmL9SyvvUUFs72wSJlmiEXH60nFJf/exec";  // Replace with your actual script URL
-
-        function startScanner() {
-            document.getElementById("reader").innerHTML = "";
-            let scanner = new Html5Qrcode("reader");
-            scanner.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: 250 },
-                (decodedText) => {
-                    document.getElementById("qrCode").value = decodedText;
-                    scanner.stop();
-                },
-                (errorMessage) => {}
-            );
-        }
-
-        document.getElementById("wingForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            
-            let data = {
-                type: "logVisit",
-                qrCode: document.getElementById("qrCode").value,
-                wing: document.getElementById("wingName").value
-            };
-
-            fetch(scriptURL, {
-                method: "POST",
-                body: JSON.stringify(data),
-                headers: { "Content-Type": "application/json" }
-            })
-            .then(response => response.text())
-            .then(result => {
-                alert(result);
-                console.log(result);
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("حدث خطأ أثناء إرسال البيانات. تحقق من الاتصال بالإنترنت أو المحاولة لاحقًا.");
-            });
+    qrScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      async (qrCode) => {
+        qrScanner.stop();
+        
+        const response = await fetch('https://script.google.com/macros/s/AKfycbzViYJSyJemchSq4Cr0dSP4uEN6MI4oZgkakqB9p1cVdTi3_5aEt8dkOKxtgloUUZjW/exec', {
+          method: 'POST',
+          body: JSON.stringify({
+            type: 'visit',
+            serial: qrCode,
+            wing: wingSelect.value
+          })
         });
-    </script>
+        
+        const result = await response.json();
+        if (result.status === 'success') {
+          alert('Check-in successful!');
+          window.location.reload();
+        }
+      },
+      (error) => console.error(error)
+    ).catch(err => console.error(err));
+  </script>
 </body>
 </html>
